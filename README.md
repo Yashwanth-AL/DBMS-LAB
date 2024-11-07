@@ -1,7 +1,8 @@
 # DBMS-LAB Course Content / Syllabus
 
 ## Program 1
-Consider a structure named Student with attributes as SID, NAME, BRANCH, SEMESTER, ADDRESS. Write a program in C/C++ to perform the following operations using the concept of files:
+Consider a structure named Student with attributes as SID, NAME, BRANCH, SEMESTER, ADDRESS. 
+Write a program in C/C++ to perform the following operations using the concept of files:
 
 a. Insert a new student
 b. Modify the address of the student based on SID
@@ -31,12 +32,14 @@ A. Sailors Database
 SAILORS (sid, sname, rating, age)
 BOAT(bid, bname, color)
 RESERVES (sid, bid, date)
+
 B. Insurance Database
 PERSON (driver_id#: string, name: string, address: string)
 CAR (regno: string, model: string, year: int)
 ACCIDENT (report_number: int, acc_date: date, location: string)
 OWNS (driver_id#: string, regno: string)
 PARTICIPATED(driver_id#: string, regno: string, report_number: int, damage_amount: int)
+
 C. Order Processing Database
 Customer (Cust#: int, cname: string, city: string)
 Order (order#: int, odate: date, cust#: int, order_amt: int)
@@ -44,12 +47,14 @@ Order-item (order#: int, item#: int, qty: int)
 Item (item#: int, unitprice: int)
 Shipment (order#: int, warehouse#: int, ship_date: date)
 Warehouse (warehouse#: int, city: string)
+
 D. Student Enrollment in Courses and Books Adopted for Each Course
 STUDENT (regno: string, name: string, major: string, bdate: date)
 COURSE (course#: int, cname: string, dept: string)
 ENROLL (regno: string, course#: int, sem: int, marks: int)
 BOOK_ADOPTION (course#: int, sem: int, book_ISBN: int)
 TEXT (book_ISBN: int, book_title: string, publisher: string, author: string)
+
 E. Company Database
 EMPLOYEE (SSN, Name, Address, Sex, Salary, SuperSSN, DNo)
 DEPARTMENT (DNo, DName, MgrSSN, MgrStartDate)
