@@ -151,8 +151,10 @@ void listStudentsByBranchAndAddress(char *branch, char *address) {
 }
 
 int main() {
+
     int choice, id;
     char branch[10], address[100];
+
     while (1) {
         printf("\nMenu:\n");
         printf("1. Insert Student\n");
