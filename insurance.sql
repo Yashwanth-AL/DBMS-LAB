@@ -1,134 +1,176 @@
-CREATE TABLE PERSON (
-    driver_id VARCHAR(18) PRIMARY KEY,
-    name VARCHAR(25),
-    address VARCHAR(50)
+DROP DATABASE IF EXISTS insurance;
+CREATE DATABASE insurance;
+USE insurance;
+
+-- Creating Tables
+CREATE TABLE IF NOT EXISTS person (
+    driver_id VARCHAR(255) PRIMARY KEY,
+    driver_name TEXT NOT NULL,
+    address TEXT NOT NULL
 );
 
-CREATE TABLE CAR (
-    regno VARCHAR(19) PRIMARY KEY,
-    model VARCHAR(10),
-    year INT
+CREATE TABLE IF NOT EXISTS car (
+    reg_no VARCHAR(255) PRIMARY KEY,
+    model TEXT NOT NULL,
+    c_year INTEGER
 );
 
-CREATE TABLE ACCIDENT (
-    report_number INT NOT NULL PRIMARY KEY,
-    acc_date DATE,
-    location VARCHAR(50)
+CREATE TABLE IF NOT EXISTS accident (
+    report_no INTEGER PRIMARY KEY,
+    accident_date DATE,
+    location TEXT
 );
 
-CREATE TABLE OWNS (
-    driver_id VARCHAR(18),
-    regno VARCHAR(19),
-    FOREIGN KEY (driver_id) REFERENCES PERSON(driver_id) ON DELETE CASCADE,
-    FOREIGN KEY (regno) REFERENCES CAR(regno) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS owns (
+    driver_id VARCHAR(255) NOT NULL,
+    reg_no VARCHAR(255) NOT NULL,
+    FOREIGN KEY (driver_id) REFERENCES person(driver_id) ON DELETE CASCADE,
+    FOREIGN KEY (reg_no) REFERENCES car(reg_no) ON DELETE CASCADE
 );
 
-CREATE TABLE PARTICIPATED (
-    driver_id VARCHAR(18),
-    regno VARCHAR(19),
-    report_number INT NOT NULL,
-    damage_amt INT NOT NULL,
-    FOREIGN KEY (driver_id) REFERENCES PERSON(driver_id) ON DELETE CASCADE,
-    FOREIGN KEY (regno) REFERENCES CAR(regno) ON DELETE CASCADE,
-    FOREIGN KEY (report_number) REFERENCES ACCIDENT(report_number) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS participated (
+    driver_id VARCHAR(255) NOT NULL,
+    reg_no VARCHAR(255) NOT NULL,
+    report_no INTEGER NOT NULL,
+    damage_amount FLOAT NOT NULL,
+    FOREIGN KEY (driver_id) REFERENCES person(driver_id) ON DELETE CASCADE,
+    FOREIGN KEY (reg_no) REFERENCES car(reg_no) ON DELETE CASCADE,
+    FOREIGN KEY (report_no) REFERENCES accident(report_no)
 );
 
--- Insert data into PERSON table
-INSERT INTO PERSON (driver_id, name, address)
-VALUES
-('D001', 'Smith', '123 Maple St'),
-('D002', 'John', '456 Oak St'),
-('D003', 'Alice', '789 Pine St'),
-('D004', 'Bob', '321 Elm St'),
-('D005', 'Eve', '654 Willow St');
+-- Inserting Data
+INSERT INTO person VALUES
+    ('D111', 'Driver_1', 'Kuvempunagar, Mysuru'),
+    ('D222', 'Smith', 'JP Nagar, Mysuru'),
+    ('D333', 'Driver_3', 'Udaygiri, Mysuru'),
+    ('D444', 'Driver_4', 'Rajivnagar, Mysuru'),
+    ('D555', 'Driver_5', 'Vijayanagar, Mysore');
 
--- Insert data into CAR table
-INSERT INTO CAR (regno, model, year)
-VALUES
-('KA09MA1234', 'Mazda', 2018),
-('KA01HY5678', 'Hyundai', 2020),
-('KA03TO3456', 'Toyota', 2019),
-('KA05FO7890', 'Ford', 2021),
-('KA07HO1235', 'Honda', 2022);
+INSERT INTO car VALUES
+    ('KA-20-AB-4223', 'Swift', 2020),
+    ('KA-20-BC-5674', 'Mazda', 2017),
+    ('KA-21-AC-5473', 'Alto', 2015),
+    ('KA-21-BD-4728', 'Triber', 2019),
+    ('KA-09-MA-1234', 'Tiago', 2018);
 
--- Insert data into ACCIDENT table
-INSERT INTO ACCIDENT (report_number, acc_date, location)
-VALUES
-(31, '2021-05-20', 'Highway 1'),
-(32, '2021-06-15', 'Downtown'),
-(33, '2021-07-10', 'City Park'),
-(34, '2022-02-20', 'River Bridge');
+INSERT INTO accident VALUES
+    (43627, '2020-04-05', 'Nazarbad, Mysuru'),
+    (56345, '2019-12-16', 'Gokulam, Mysuru'),
+    (63744, '2020-05-14', 'Vijaynagar, Mysuru'),
+    (54634, '2019-08-30', 'Kuvempunagar, Mysuru'),
+    (65738, '2021-01-21', 'JSS Layout, Mysuru'),
+    (66666, '2021-01-21', 'JSS Layout, Mysuru');
 
--- Insert data into OWNS table
-INSERT INTO OWNS (driver_id, regno)
-VALUES
-('D001', 'KA09MA1234'),
-('D001', 'KA01HY5678'),
-('D002', 'KA03TO3456'),
-('D003', 'KA05FO7890'),
-('D004', 'KA07HO1235');
+INSERT INTO owns VALUES
+    ('D111', 'KA-20-AB-4223'),
+    ('D222', 'KA-20-BC-5674'),
+    ('D333', 'KA-21-AC-5473'),
+    ('D444', 'KA-21-BD-4728'),
+    ('D222', 'KA-09-MA-1234');
 
--- Insert data into PARTICIPATED table
-INSERT INTO PARTICIPATED (driver_id, regno, report_number, damage_amt)
-VALUES
-('D001', 'KA09MA1234', 31, 15000),
-('D001', 'KA01HY5678', 32, 20000),
-('D002', 'KA03TO3456', 31, 30000),
-('D003', 'KA05FO7890', 33, 25000),
-('D004', 'KA07HO1235', 34, 40000);
+INSERT INTO participated VALUES
+    ('D111', 'KA-20-AB-4223', 43627, 20000),
+    ('D222', 'KA-20-BC-5674', 56345, 49500),
+    ('D333', 'KA-21-AC-5473', 63744, 15000),
+    ('D444', 'KA-21-BD-4728', 54634, 5000),
+    ('D222', 'KA-09-MA-1234', 65738, 25000);
 
+-- Queries
+-- Find the total number of people who owned a car involved in accidents in 2021
+SELECT COUNT(DISTINCT o.driver_id) 
+FROM owns o 
+JOIN participated p ON o.reg_no = p.reg_no 
+JOIN accident a ON p.report_no = a.report_no 
+WHERE YEAR(a.accident_date) = 2021;
 
--- Find the total number of people who owned cars involved in accidents in 2021
-SELECT COUNT(DISTINCT P.driver_id) AS total_people_involved
-FROM PERSON P
-JOIN OWNS O ON P.driver_id = O.driver_id
-JOIN PARTICIPATED PA ON O.regno = PA.regno
-JOIN ACCIDENT A ON PA.report_number = A.report_number
-WHERE YEAR(A.acc_date) = 2021;
-
--- Find the number of accidents involving cars owned by "Smith"
-SELECT COUNT(*) AS accidents_involving_smith
-FROM PERSON P
-JOIN OWNS O ON P.driver_id = O.driver_id
-JOIN PARTICIPATED PA ON O.regno = PA.regno
-WHERE P.name = 'Smith';
+-- Find the number of accidents involving cars belonging to Smith
+SELECT COUNT(DISTINCT p.report_no) 
+FROM participated p 
+JOIN owns o ON p.reg_no = o.reg_no 
+JOIN person pe ON o.driver_id = pe.driver_id 
+WHERE pe.driver_name = 'Smith';
 
 -- Add a new accident
-INSERT INTO ACCIDENT VALUES (78, '2022-01-01', 'ABC Rd');
+INSERT INTO accident VALUES (45562, '2024-04-05', 'Mandya');
+INSERT INTO participated VALUES ('D222', 'KA-21-BD-4728', 45562, 50000);
 
--- Delete a Mazda owned by "Smith"
-DELETE FROM OWNS
-WHERE driver_id = (SELECT driver_id FROM PERSON WHERE name = 'Smith')
-AND regno IN (SELECT regno FROM CAR WHERE model = 'Mazda');
+-- Delete the Mazda belonging to Smith
+DELETE FROM car
+WHERE model = 'Mazda' AND reg_no IN (
+    SELECT car.reg_no FROM person p, owns o 
+    WHERE p.driver_id = o.driver_id 
+    AND o.reg_no = car.reg_no 
+    AND p.driver_name = 'Smith'
+);
 
--- Update the damage amount for a specific car and accident
-UPDATE PARTICIPATED
-SET damage_amt = 170000
-WHERE regno = 'KA09MA1234'
-AND report_number = (SELECT report_number FROM ACCIDENT WHERE report_number = 32);
+-- Update the damage amount
+UPDATE participated
+SET damage_amount = 10000
+WHERE report_no = 65738 AND reg_no = 'KA-09-MA-1234';
 
--- Create a view showing models and years of cars involved in accidents
-CREATE VIEW AccidentView AS
-SELECT DISTINCT C.model, C.year
-FROM CAR C
-JOIN PARTICIPATED PA ON C.regno = PA.regno;
+-- Views
+--  A view that shows models and year of cars that are involved in accident. 
+CREATE VIEW CarsInAccident AS
+SELECT DISTINCT model, c_year
+FROM car c, participated p
+WHERE c.reg_no = p.reg_no;
 
--- Trigger to prevent drivers from participating in more than 3 accidents in a year
+SELECT * FROM CarsInAccident;
+
+--Create a view that shows name and address of drivers who own a car.
+
+CREATE VIEW DriversWithCar AS
+SELECT driver_name, address
+FROM person p, owns o
+WHERE p.driver_id = o.driver_id;
+
+SELECT * FROM DriversWithCar;
+
+--Create a view that shows the names of the drivers who a participated in a accident in a specific place.
+
+CREATE VIEW DriversWithAccidentInPlace AS
+SELECT driver_name
+FROM person p, accident a, participated ptd
+WHERE p.driver_id = ptd.driver_id 
+AND a.report_no = ptd.report_no 
+AND a.location = 'Vijaynagar, Mysuru';
+
+SELECT * FROM DriversWithAccidentInPlace;
+
+-- Triggers
+-- Prevent a driver with total damage > Rs. 50,000 from owning a car
 DELIMITER //
-CREATE TRIGGER PreventExcessiveAccidents
-BEFORE INSERT ON PARTICIPATED
+CREATE OR REPLACE TRIGGER PreventOwnership 
+BEFORE INSERT ON owns 
 FOR EACH ROW
 BEGIN
-    DECLARE accident_count INT;
-    SELECT COUNT(*) INTO accident_count
-    FROM PARTICIPATED PA
-    JOIN ACCIDENT A ON PA.report_number = A.report_number
-    WHERE PA.driver_id = NEW.driver_id
-    AND YEAR(A.acc_date) = YEAR(CURDATE());
-    IF accident_count >= 3 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Driver cannot participate in more than 3 accidents in a year.';
+    IF NEW.driver_id IN (
+        SELECT driver_id FROM participated 
+        GROUP BY driver_id
+        HAVING SUM(damage_amount) >= 50000
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Damage Greater than Rs.50,000';
     END IF;
 END;
 //
 DELIMITER ;
+
+INSERT INTO owns VALUES ('D222', 'KA-21-AC-5473'); -- Will give error
+
+-- Prevent a driver from participating in more than 3 accidents in a given year
+DELIMITER //
+CREATE TRIGGER PreventParticipation
+BEFORE INSERT ON participated
+FOR EACH ROW
+BEGIN
+    IF 3 <= (
+        SELECT COUNT(*) FROM participated 
+        WHERE driver_id = NEW.driver_id
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Driver has already participated in 3 accidents';
+    END IF;
+END;
+//
+DELIMITER ;
+
+INSERT INTO participated VALUES ('D222', 'KA-20-AB-4223', 66666, 20000);

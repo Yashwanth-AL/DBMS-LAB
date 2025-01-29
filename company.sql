@@ -1,147 +1,167 @@
-CREATE TABLE DEPARTMENT (
-    DNo INT PRIMARY KEY,
-    DName VARCHAR(25),
-    MgrSSN INT,
-    MgrStartDate DATE
+DROP DATABASE IF EXISTS company;
+CREATE DATABASE company;
+USE company;
+
+CREATE TABLE IF NOT EXISTS Employee (
+    ssn VARCHAR(35) PRIMARY KEY,
+    name VARCHAR(35) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    sex VARCHAR(7) NOT NULL,
+    salary INT NOT NULL,
+    super_ssn VARCHAR(35),
+    d_no INT,
+    FOREIGN KEY (super_ssn) REFERENCES Employee(ssn) ON DELETE SET NULL
 );
 
-CREATE TABLE DLOCATION (
-    DNo INT PRIMARY KEY,
-    DLoc VARCHAR(255),
-    FOREIGN KEY (DNo) REFERENCES DEPARTMENT(DNo) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS Department (
+    d_no INT PRIMARY KEY,
+    dname VARCHAR(100) NOT NULL,
+    mgr_ssn VARCHAR(35),
+    mgr_start_date DATE,
+    FOREIGN KEY (mgr_ssn) REFERENCES Employee(ssn) ON DELETE CASCADE
 );
 
-CREATE TABLE EMPLOYEE (
-    SSN INT PRIMARY KEY,
-    Name VARCHAR(25),
-    Address VARCHAR(255),
-    Sex CHAR(1),
-    Salary FLOAT,
-    SuperSSN INT,
-    DNo INT,
-    FOREIGN KEY (DNo) REFERENCES DEPARTMENT(DNo) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS DLocation (
+    d_no INT NOT NULL,
+    d_loc VARCHAR(100) NOT NULL,
+    FOREIGN KEY (d_no) REFERENCES Department(d_no) ON DELETE CASCADE
 );
 
-CREATE TABLE PROJECT (
-    PNo INT PRIMARY KEY,
-    PName VARCHAR(255),
-    PLocation VARCHAR(255),
-    DNo INT,
-    FOREIGN KEY (DNo) REFERENCES DEPARTMENT(DNo) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS Project (
+    p_no INT PRIMARY KEY,
+    p_name VARCHAR(25) NOT NULL,
+    p_loc VARCHAR(25) NOT NULL,
+    d_no INT NOT NULL,
+    FOREIGN KEY (d_no) REFERENCES Department(d_no) ON DELETE CASCADE
 );
 
-CREATE TABLE WORKS_ON (
-    SSN INT,
-    PNo INT,
-    Hours INT,
-    PRIMARY KEY (SSN, PNo),
-    FOREIGN KEY (SSN) REFERENCES EMPLOYEE(SSN) ON DELETE CASCADE,
-    FOREIGN KEY (PNo) REFERENCES PROJECT(PNo) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS WorksOn (
+    ssn VARCHAR(35) NOT NULL,
+    p_no INT NOT NULL,
+    hours INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (ssn) REFERENCES Employee(ssn) ON DELETE CASCADE,
+    FOREIGN KEY (p_no) REFERENCES Project(p_no) ON DELETE CASCADE
 );
 
-INSERT INTO DEPARTMENT (DNo, DName, MgrSSN, MgrStartDate)
-VALUES 
-(1, 'Accounts', 123456789, '2010-05-15'),
-(2, 'HR', 234567890, '2012-08-22'),
-(3, 'Engineering', 345678901, '2015-03-10');
+ALTER TABLE Employee 
+ADD CONSTRAINT FOREIGN KEY (d_no) REFERENCES Department(d_no) ON DELETE CASCADE;
 
+INSERT INTO Employee VALUES
+("01NB235", "Chandan_Krishna", "Siddartha Nagar, Mysuru", "Male", 1500000, "01NB235", 5),
+("01NB354", "Employee_2", "Lakshmipuram, Mysuru", "Female", 1200000, "01NB235", 2),
+("02NB254", "Employee_3", "Pune, Maharashtra", "Male", 1000000, "01NB235", 4),
+("03NB653", "Employee_4", "Hyderabad, Telangana", "Male", 2500000, "01NB354", 5),
+("04NB234", "Employee_5", "JP Nagar, Bengaluru", "Female", 1700000, "01NB354", 1);
 
-INSERT INTO DLOCATION (DNo, DLoc)
-VALUES 
-(1, 'New York'),
-(2, 'Chicago'),
-(3, 'San Francisco');
+INSERT INTO Department VALUES
+(001, "Human Resources", "01NB235", "2020-10-21"),
+(002, "Quality Assesment", "03NB653", "2020-10-19"),
+(003, "System Assesment", "04NB234", "2020-10-27"),
+(005, "Production", "02NB254", "2020-08-16"),
+(004, "Accounts", "01NB354", "2020-09-04");
 
-INSERT INTO EMPLOYEE (SSN, Name, Address, Sex, Salary, SuperSSN, DNo)
-VALUES 
-(123456789, 'John Scott', '123 Main St, NY', 'M', 55000, NULL, 1),
-(234567890, 'Jane Doe', '456 Elm St, Chicago', 'F', 60000, 123456789, 2),
-(345678901, 'Michael Scott', '789 Oak St, SF', 'M', 70000, NULL, 3),
-(456789012, 'Sara Brown', '101 Pine St, SF', 'F', 65000, 345678901, 3);
+INSERT INTO DLocation VALUES
+(001, "Jaynagar, Bengaluru"),
+(002, "Vijaynagar, Mysuru"),
+(003, "Chennai, Tamil Nadu"),
+(004, "Mumbai, Maharashtra"),
+(005, "Kuvempunagar, Mysuru");
 
-INSERT INTO PROJECT (PNo, PName, PLocation, DNo)
-VALUES 
-(101, 'IoT', 'San Francisco', 3),
-(102, 'Cloud Computing', 'Chicago', 2),
-(103, 'Blockchain', 'New York', 1);
+INSERT INTO Project VALUES
+(241563, "System Testing", "Mumbai, Maharashtra", 004),
+(532678, "IOT", "JP Nagar, Bengaluru", 001),
+(453723, "Product Optimization", "Hyderabad, Telangana", 005),
+(278345, "Yeild Increase", "Kuvempunagar, Mysuru", 005),
+(426784, "Product Refinement", "Saraswatipuram, Mysuru", 002);
 
-INSERT INTO WORKS_ON (SSN, PNo, Hours)
-VALUES 
-(123456789, 101, 40),
-(234567890, 102, 30),
-(345678901, 103, 35),
-(456789012, 101, 40);
+INSERT INTO WorksOn VALUES
+("01NB235", 278345, 5),
+("01NB354", 426784, 6),
+("04NB234", 532678, 3),
+("02NB254", 241563, 3),
+("03NB653", 453723, 6);
 
+SELECT * FROM Department;
+SELECT * FROM Employee;
+SELECT * FROM DLocation;
+SELECT * FROM Project;
+SELECT * FROM WorksOn;
 
--- List all project numbers involving employees whose last name is 'Scott'
-SELECT DISTINCT P.PNo
-FROM PROJECT P
-JOIN WORKS_ON W ON P.PNo = W.PNo
-JOIN EMPLOYEE E ON W.SSN = E.SSN
-WHERE E.Name LIKE '%Scott';
+-- Retrieve project numbers for projects involving an employee with last name 'Scott'
+SELECT p_no, p_name, name 
+FROM Project p, Employee e 
+WHERE p.d_no = e.d_no AND e.name LIKE "%Krishna";
 
--- Show resulting salaries if every employee working on the 'IoT' project gets a 10% raise
-UPDATE EMPLOYEE
-SET Salary = Salary * 1.10
-WHERE SSN IN (
-    SELECT W.SSN
-    FROM WORKS_ON W
-    JOIN PROJECT P ON W.PNo = P.PNo
-    WHERE P.PName = 'IoT'
-);
+-- Show salaries after a 10% raise for employees working on the 'IoT' project
+SELECT w.ssn, name, salary AS old_salary, salary * 1.1 AS new_salary 
+FROM WorksOn w 
+JOIN Employee e ON w.ssn = e.ssn 
+WHERE w.p_no = (SELECT p_no FROM Project WHERE p_name = "IOT");
 
--- Find the sum of salaries, max salary, min salary, and avg salary for 'Accounts' department
-SELECT 
-    SUM(Salary) AS TotalSalary,
-    MAX(Salary) AS MaxSalary,
-    MIN(Salary) AS MinSalary,
-    AVG(Salary) AS AvgSalary
-FROM EMPLOYEE
-WHERE DNo = (SELECT DNo FROM DEPARTMENT WHERE DName = 'Accounts');
+-- Sum, max, min, and average salary of 'Accounts' department
+SELECT SUM(salary) AS sal_sum, MAX(salary) AS sal_max, MIN(salary) AS sal_min, AVG(salary) AS sal_avg 
+FROM Employee e 
+JOIN Department d ON e.d_no = d.d_no 
+WHERE d.dname = "Accounts";
 
--- Retrieve names of employees who work on all projects controlled by department #5
-SELECT E.Name
-FROM EMPLOYEE E
+-- Employees working on all projects controlled by department 1 (using NOT EXISTS)
+SELECT Employee.ssn, name, d_no 
+FROM Employee 
 WHERE NOT EXISTS (
-    SELECT P.PNo
-    FROM PROJECT P
-    WHERE P.DNo = 5
-    AND NOT EXISTS (
-        SELECT W.PNo
-        FROM WORKS_ON W
-        WHERE W.SSN = E.SSN AND W.PNo = P.PNo
+    SELECT p_no FROM Project p 
+    WHERE p.d_no = 1 AND p_no NOT IN (
+        SELECT p_no FROM WorksOn w WHERE w.ssn = Employee.ssn
     )
 );
 
--- Retrieve department numbers and employee counts for departments with > 5 employees
-SELECT DNo, COUNT(*) AS NumEmployees
-FROM EMPLOYEE
-GROUP BY DNo
-HAVING COUNT(*) > 5;
+-- Departments with more than one employee earning more than Rs. 6,00,000
+SELECT d.d_no, COUNT(*) 
+FROM Department d 
+JOIN Employee e ON e.d_no = d.d_no 
+WHERE salary > 600000 
+GROUP BY d.d_no 
+HAVING COUNT(*) > 1;
 
+-- Create a view showing employee name, department name, and location
+CREATE VIEW emp_details AS
+SELECT name, dname, d_loc 
+FROM Employee e 
+JOIN Department d ON e.d_no = d.d_no 
+JOIN DLocation dl ON d.d_no = dl.d_no;
 
--- Create a view showing name, department name, and location of all employees
-CREATE VIEW EmployeeDetails AS
-SELECT E.Name, D.DName AS DeptName, DL.DLoc AS DeptLocation
-FROM EMPLOYEE E
-JOIN DEPARTMENT D ON E.DNo = D.DNo
-JOIN DLOCATION DL ON D.DNo = DL.DNo;
+SELECT * FROM emp_details;
 
+-- Create a view showing project name, location, and department
+CREATE VIEW ProjectDetails AS
+SELECT p_name, p_loc, dname
+FROM Project p 
+NATURAL JOIN Department d;
 
--- Trigger to prevent deletion of projects currently being worked on
+SELECT * FROM ProjectDetails;
+
+-- Trigger to update manager's start date when assigned
 DELIMITER //
-CREATE TRIGGER preventProjectDeletion
-BEFORE DELETE ON PROJECT
+CREATE TRIGGER UpdateManagerStartDate
+BEFORE INSERT ON Department
 FOR EACH ROW
 BEGIN
-    DECLARE project_count INT;
-    SELECT COUNT(*) INTO project_count
-    FROM WORKS_ON
-    WHERE PNo = OLD.PNo;
-    IF project_count > 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Cannot delete project currently being worked on.';
-    END IF;
-END;
-//
+    SET NEW.mgr_start_date = CURDATE();
+END;//
 DELIMITER ;
+
+INSERT INTO Department (d_no, dname, mgr_ssn) VALUES
+(006, "R&D", "01NB354");
+
+-- Trigger to prevent deletion of projects being worked on
+DELIMITER //
+CREATE TRIGGER PreventDelete
+BEFORE DELETE ON Project
+FOR EACH ROW
+BEGIN
+    IF EXISTS (SELECT * FROM WorksOn WHERE p_no = OLD.p_no) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'This project has an employee assigned';
+    END IF;
+END;//
+DELIMITER ;
+
+DELETE FROM Project WHERE p_no = 241563;
