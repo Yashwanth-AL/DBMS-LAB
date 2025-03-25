@@ -1,16 +1,15 @@
-DROP DATABASE IF EXISTS order_processing;
 CREATE DATABASE order_processing;
 USE order_processing;
 
 -- Creating Customers table
-CREATE TABLE IF NOT EXISTS Customers (
+CREATE TABLE Customers (
     cust_id INT PRIMARY KEY,
     cname VARCHAR(35) NOT NULL,
     city VARCHAR(35) NOT NULL
 );
 
 -- Creating Orders table
-CREATE TABLE IF NOT EXISTS Orders (
+CREATE TABLE Orders (
     order_id INT PRIMARY KEY,
     odate DATE NOT NULL,
     cust_id INT,
@@ -19,13 +18,13 @@ CREATE TABLE IF NOT EXISTS Orders (
 );
 
 -- Creating Items table
-CREATE TABLE IF NOT EXISTS Items (
+CREATE TABLE Items (
     item_id INT PRIMARY KEY,
     unitprice INT NOT NULL
 );
 
 -- Creating OrderItems table
-CREATE TABLE IF NOT EXISTS OrderItems (
+CREATE TABLE OrderItems (
     order_id INT NOT NULL,
     item_id INT NOT NULL,
     qty INT NOT NULL,
@@ -34,13 +33,13 @@ CREATE TABLE IF NOT EXISTS OrderItems (
 );
 
 -- Creating Warehouses table
-CREATE TABLE IF NOT EXISTS Warehouses (
+CREATE TABLE Warehouses (
     warehouse_id INT PRIMARY KEY,
     city VARCHAR(35) NOT NULL
 );
 
 -- Creating Shipments table
-CREATE TABLE IF NOT EXISTS Shipments (
+CREATE TABLE Shipments (
     order_id INT NOT NULL,
     warehouse_id INT NOT NULL,
     ship_date DATE NOT NULL,
@@ -104,11 +103,10 @@ SELECT * FROM Items;
 SELECT * FROM Shipments;
 SELECT * FROM Warehouses;
 
--- Retrieve order_id and ship_date for orders shipped from Warehouse 1
-SELECT order_id, ship_date FROM Shipments WHERE warehouse_id = 1;
+-- Retrieve order_id and ship_date for orders shipped from Warehouse 2
+SELECT order_id, ship_date FROM Shipments WHERE warehouse_id = 2;
 
--- Retrieve warehouses shipping orders to Kumar
-
+-- List the Warehouse information from which the Customer named "Kumar" was supplied his orders. Produce a listing of Order#, Warehouse#.
 SELECT o.order_id, s.warehouse_id 
 FROM Orders o 
 JOIN Customers c ON o.cust_id = c.cust_id 
@@ -126,41 +124,19 @@ DELETE FROM Orders
 WHERE cust_id = (SELECT cust_id FROM Customers WHERE cname LIKE "%Kumar%");
 
 -- Find item with the highest unit price
-SELECT MAX(unitprice) FROM Items;
+SELECT item_id, unitprice
+FROM Items
+WHERE unitprice = (SELECT MAX(unitprice) FROM Items);
 
--- Create view for shipments from warehouse 2
+
+-- Create view for shipments from warehouse 5
 CREATE VIEW ShipmentDatesFromWarehouse2 AS
-SELECT order_id, ship_date FROM Shipments WHERE warehouse_id = 2;
+SELECT order_id, ship_date FROM Shipments WHERE warehouse_id = 5;
 SELECT * FROM ShipmentDatesFromWarehouse2;
 
--- A view that shows the warehouse name from where the kumar’s order is been shipped.
-
-CREATE VIEW KumarWarehouse AS 
-SELECT DISTINCT w.city AS warehouse_name 
-FROM Warehouses w 
-JOIN Shipments s ON w.warehouse_id = s.warehouse_id 
-JOIN Orders o ON s.order_id = o.order_id 
-JOIN Customers c ON o.cust_id = c.cust_id 
-WHERE c.cname = 'Kumar';
-
--- Trigger to prevent warehouse deletion if shipments exist
-DELIMITER $$d
-CREATE TRIGGER PreventWarehouseDelete
-BEFORE DELETE ON Warehouses
-FOR EACH ROW
-BEGIN 
-    IF OLD.warehouse_id IN (SELECT warehouse_id FROM Shipments) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'An item has to be shipped from this warehouse!';
-    END IF;
-END;
-$$
-DELIMITER ;
-
--- Attempt to delete warehouse 2 (should fail)
-DELETE FROM Warehouses WHERE warehouse_id = 2;
 
 -- Trigger to update order amount based on quantity and unit price
-DELIMITER $$
+DELIMITER //
 CREATE TRIGGER UpdateOrderAmt
 AFTER INSERT ON OrderItems
 FOR EACH ROW
@@ -169,7 +145,7 @@ BEGIN
     SET order_amt = (NEW.qty * (SELECT unitprice FROM Items WHERE item_id = NEW.item_id))
     WHERE order_id = NEW.order_id;
 END;
-$$
+//
 DELIMITER ;
 
 -- Insert a new order and update automatically

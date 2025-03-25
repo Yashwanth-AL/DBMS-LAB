@@ -1,8 +1,7 @@
-DROP DATABASE IF EXISTS company;
 CREATE DATABASE company;
 USE company;
 
-CREATE TABLE IF NOT EXISTS Employee (
+CREATE TABLE Employee (
     ssn VARCHAR(35) PRIMARY KEY,
     name VARCHAR(35) NOT NULL,
     address VARCHAR(255) NOT NULL,
@@ -13,21 +12,24 @@ CREATE TABLE IF NOT EXISTS Employee (
     FOREIGN KEY (super_ssn) REFERENCES Employee(ssn) ON DELETE SET NULL
 );
 
-CREATE TABLE IF NOT EXISTS Department (
+CREATE TABLE Department (
     d_no INT PRIMARY KEY,
     dname VARCHAR(100) NOT NULL,
     mgr_ssn VARCHAR(35),
     mgr_start_date DATE,
-    FOREIGN KEY (d_no) REFERENCES Employee(d_no) ON DELETE CASCADE
+    FOREIGN KEY (mgr_ssn) REFERENCES Employee(ssn) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS DLocation (
+ALTER TABLE Employee 
+ADD CONSTRAINT FOREIGN KEY (d_no) REFERENCES Department(d_no) ON DELETE CASCADE;
+
+CREATE TABLE DLocation (
     d_no INT NOT NULL,
     d_loc VARCHAR(100) NOT NULL,
     FOREIGN KEY (d_no) REFERENCES Department(d_no) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS Project (
+CREATE TABLE Project (
     p_no INT PRIMARY KEY,
     p_name VARCHAR(25) NOT NULL,
     p_loc VARCHAR(25) NOT NULL,
@@ -35,16 +37,13 @@ CREATE TABLE IF NOT EXISTS Project (
     FOREIGN KEY (d_no) REFERENCES Department(d_no) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS WorksOn (
+CREATE TABLE WorksOn (
     ssn VARCHAR(35) NOT NULL,
     p_no INT NOT NULL,
     hours INT NOT NULL DEFAULT 0,
     FOREIGN KEY (ssn) REFERENCES Employee(ssn) ON DELETE CASCADE,
     FOREIGN KEY (p_no) REFERENCES Project(p_no) ON DELETE CASCADE
 );
-
-ALTER TABLE Employee 
-ADD CONSTRAINT FOREIGN KEY (d_no) REFERENCES Department(d_no) ON DELETE CASCADE;
 
 INSERT INTO Employee VALUES
 ("01NB235", "Chandan_Krishna", "Siddartha Nagar, Mysuru", "Male", 1500000, "01NB235", 5),
@@ -87,24 +86,39 @@ SELECT * FROM DLocation;
 SELECT * FROM Project;
 SELECT * FROM WorksOn;
 
--- Retrieve project numbers for projects involving an employee with last name 'Scott'
-SELECT p_no, p_name, name 
-FROM Project p, Employee e 
-WHERE p.d_no = e.d_no AND e.name LIKE "%Krishna";
+-- RMake a list of all project numbers for projects that involve an employee whose last name is ‘Scott’, either as a worker or as a manager of the department that controls the project.
+SELECT DISTINCT P.p_no
+FROM Project P
+JOIN WorksOn W ON P.p_no = W.p_no
+JOIN Employee E ON W.ssn = E.ssn
+WHERE E.name LIKE '%Scott'
+UNION
+SELECT DISTINCT P.p_no
+FROM Project P
+JOIN Department D ON P.d_no = D.d_no
+JOIN Employee E ON D.mgr_ssn = E.ssn
+WHERE E.name LIKE '%Scott';
 
 -- Show salaries after a 10% raise for employees working on the 'IoT' project
-SELECT w.ssn, name, salary AS old_salary, salary * 1.1 AS new_salary 
-FROM WorksOn w 
-JOIN Employee e ON w.ssn = e.ssn 
-WHERE w.p_no = (SELECT p_no FROM Project WHERE p_name = "IOT");
+SELECT E.ssn, E.name, E.salary AS Old_Salary, 
+       E.salary * 1.1 AS New_Salary
+FROM Employee E
+JOIN WorksOn W ON E.ssn = W.ssn
+JOIN Project P ON W.p_no = P.p_no
+WHERE P.p_name = 'IOT';
+
+-- SELECT w.ssn, name, salary AS old_salary, salary * 1.1 AS new_salary 
+-- FROM WorksOn w 
+-- JOIN Employee e ON w.ssn = e.ssn 
+-- WHERE w.p_no = (SELECT p_no FROM Project WHERE p_name = "IOT");
 
 -- Sum, max, min, and average salary of 'Accounts' department
-SELECT SUM(salary) AS sal_sum, MAX(salary) AS sal_max, MIN(salary) AS sal_min, AVG(salary) AS sal_avg 
+SELECT SUM(salary) AS Total_Salary, MAX(salary) AS Max_Salary, MIN(salary) AS Min_Salary, AVG(salary) AS Avg_Salary 
 FROM Employee e 
 JOIN Department d ON e.d_no = d.d_no 
 WHERE d.dname = "Accounts";
 
--- Employees working on all projects controlled by department 1 (using NOT EXISTS)
+--  Retrieve the name of each employee who works on all the projects controlled by department number 5 (use NOT EXISTS operator).
 SELECT e.name
 FROM Employee e
 WHERE NOT EXISTS (
@@ -115,13 +129,12 @@ WHERE NOT EXISTS (
 );
 
 
--- Departments with more than one employee earning more than Rs. 6,00,000
-SELECT d.d_no, COUNT(*) 
-FROM Department d 
+-- Departments with more than 5 employee earning more than Rs. 6,00,000
+SELECT d.d_no, COUNT(*) AS High_Earning_Employees FROM Department d 
 JOIN Employee e ON e.d_no = d.d_no 
 WHERE salary > 600000 
 GROUP BY d.d_no 
-HAVING COUNT(*) > 1;
+HAVING COUNT(*) > 5;
 
 -- Create a view showing employee name, department name, and location
 CREATE VIEW emp_details AS
@@ -129,29 +142,8 @@ SELECT name, dname, d_loc
 FROM Employee e 
 JOIN Department d ON e.d_no = d.d_no 
 JOIN DLocation dl ON d.d_no = dl.d_no;
-
 SELECT * FROM emp_details;
 
--- Create a view showing project name, location, and department
-CREATE VIEW ProjectDetails AS
-SELECT p_name, p_loc, dname
-FROM Project p 
-NATURAL JOIN Department d;
-
-SELECT * FROM ProjectDetails;
-
--- Trigger to update manager's start date when assigned
-DELIMITER //
-CREATE TRIGGER UpdateManagerStartDate
-BEFORE INSERT ON Department
-FOR EACH ROW
-BEGIN
-    SET NEW.mgr_start_date = CURDATE();
-END;//
-DELIMITER ;
-
-INSERT INTO Department (d_no, dname, mgr_ssn) VALUES
-(006, "R&D", "01NB354");
 
 -- Trigger to prevent deletion of projects being worked on
 DELIMITER //
