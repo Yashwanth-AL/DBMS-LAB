@@ -73,10 +73,17 @@ WHERE R.bid = 103;
 
 SELECT DISTINCT s.sname
 FROM Sailors s
-LEFT JOIN Reserves r ON s.sid = r.sid
-WHERE r.sid IS NULL 
+WHERE s.sid NOT IN (SELECT r.sid FROM Reserves r)
 AND s.sname LIKE '%storm%'
 ORDER BY s.sname ASC;
+
+-- SELECT DISTINCT s.sname
+-- FROM Sailors s
+-- LEFT JOIN Reserves r ON s.sid = r.sid
+-- WHERE r.sid IS NULL 
+-- AND s.sname LIKE '%storm%'
+-- ORDER BY s.sname ASC;
+
 
 -- Find names of sailors who have reserved all boats
 SELECT sname FROM Sailors s WHERE NOT EXISTS (

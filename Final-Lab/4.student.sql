@@ -144,11 +144,11 @@ CREATE TRIGGER PreventEnrollment
 BEFORE INSERT ON Enroll
 FOR EACH ROW
 BEGIN
-    IF (NEW.marks < 10) THEN
+    IF (NEW.marks < 40) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Marks below threshold';
     END IF;
 END;//
 DELIMITER ;
 
 INSERT INTO Enroll VALUES
-("01HF235", 002, 5, 5); -- Will give an error since marks are less than 10
+("01HF235", 002, 5, 5); -- Will give an error since marks are less than 40
